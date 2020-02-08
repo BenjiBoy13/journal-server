@@ -1,0 +1,8 @@
+root:
+  method: GET
+  controller: Server\Api\Controllers\RootController
+  paths:
+    - path: /
+      action: indexAction
+      services:
+        - Server\Http\HttpRequest
