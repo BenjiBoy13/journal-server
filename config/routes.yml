@@ -1,8 +1,30 @@
 root:
-  method: GET
   controller: Server\Api\Controllers\RootController
   paths:
     - path: /
+      method: GET
       action: indexAction
+      services:
+        - Server\Http\HttpRequest
+
+auth:
+  controller: Server\Api\Controllers\AuthController
+  paths:
+    - path: /register
+      method: POST
+      action: registerAction
+      parameters:
+        - username
+        - fullName
+        - email
+        - password
+      services:
+        - Server\Http\HttpRequest
+    - path: /login
+      method: POST
+      action: loginAction
+      parameters:
+        - email
+        - password
       services:
         - Server\Http\HttpRequest

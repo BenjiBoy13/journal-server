@@ -1,1 +1,2 @@
-web_root: /journal.project/server
+web_root: /diary.project/server
+debug: true

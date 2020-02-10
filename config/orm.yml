@@ -1,0 +1,6 @@
+db:
+  host: localhost
+  database: db_diary
+  username: root
+  password: BgF04131999
+  driver: pdo_mysql
