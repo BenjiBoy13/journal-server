@@ -14,8 +14,7 @@ auth:
       method: POST
       action: registerAction
       parameters:
-        - username
-        - fullName
+        - nickname
         - email
         - password
       services:
@@ -35,3 +34,20 @@ auth:
       services:
         - Server\Http\HttpRequest
         - Server\Http\JWT
+
+journals:
+  controller: Server\Api\Controllers\JournalController
+  paths:
+    - path: /journals/add
+      method: POST
+      action: addJournalAction
+      parameters:
+        - title
+        - content
+      services:
+        - Server\Http\HttpRequest
+    - path: /journals
+      method: GET
+      action: getUserJournals
+      services:
+        - Server\Http\HttpRequest

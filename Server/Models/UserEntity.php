@@ -4,7 +4,9 @@
 namespace Server\Models;
 
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
 
 /**
  * @ORM\Entity(repositoryClass="Server\Repositories\UserRepository")
@@ -14,40 +16,45 @@ class UserEntity
 {
     /**
      * @ORM\Id
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", name="usr_id")
      * @ORM\GeneratedValue
      */
     private int $id;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", name="usr_nickname")
      */
-    private string $fullName;
+    private string $nickname;
 
     /**
-     * @ORM\Column(type="string")
-     */
-    private string $username;
-
-    /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", name="usr_password")
      */
     private string $password;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", name="usr_email")
      */
     private string $email;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="date", name="usr_creation_date")
      */
     private DateTime $creationDate;
 
     /**
+     * @ORM\OneToMany(targetEntity="JournalEntity", mappedBy="user")
+     */
+    private PersistentCollection $journals;
+
+    public function __construct()
+    {
+        $this->journals = new PersistentCollection();
+    }
+
+    /**
      * @return int
      */
-    public function getId(): int
+    public function getId() : int
     {
         return $this->id;
     }
@@ -55,39 +62,23 @@ class UserEntity
     /**
      * @return string
      */
-    public function getFullName(): string
+    public function getNickname() : string
     {
-        return $this->fullName;
+        return $this->nickname;
     }
 
     /**
-     * @param string $fullName
+     * @param string $nickname
      */
-    public function setFullName(string $fullName): void
+    public function setNickname(string $nickname) : void
     {
-        $this->fullName = $fullName;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUsername(): string
-    {
-        return $this->username;
-    }
-
-    /**
-     * @param string $username
-     */
-    public function setUsername(string $username): void
-    {
-        $this->username = $username;
+        $this->nickname = $nickname;
     }
 
     /**
      * @return string
      */
-    public function getPassword(): string
+    public function getPassword() : string
     {
         return $this->password;
     }
@@ -95,7 +86,7 @@ class UserEntity
     /**
      * @param string $password
      */
-    public function setPassword(string $password): void
+    public function setPassword(string $password) : void
     {
         $password = password_hash($password, PASSWORD_DEFAULT);
         $this->password = $password;
@@ -104,7 +95,7 @@ class UserEntity
     /**
      * @return string
      */
-    public function getEmail(): string
+    public function getEmail() : string
     {
         return $this->email;
     }
@@ -112,7 +103,7 @@ class UserEntity
     /**
      * @param string $email
      */
-    public function setEmail(string $email): void
+    public function setEmail(string $email) : void
     {
         $this->email = $email;
     }
@@ -120,7 +111,7 @@ class UserEntity
     /**
      * @return DateTime
      */
-    public function getCreationDate(): DateTime
+    public function getCreationDate() : DateTime
     {
         return $this->creationDate;
     }
@@ -131,5 +122,13 @@ class UserEntity
     public function setCreationDate(DateTime $creationDate): void
     {
         $this->creationDate = $creationDate;
+    }
+
+    /**
+     * @return PersistentCollection
+     */
+    public function getJournals() : PersistentCollection
+    {
+        return $this->journals;
     }
 }

@@ -37,4 +37,25 @@ class HttpRequest
 
         echo json_encode($response);
     }
+
+    /**
+     * @return object|null
+     */
+    public function authenticated () : ?object
+    {
+        $jwt = new JWT();
+
+        if (isset(apache_request_headers()['Authorization'])) {
+            $token = apache_request_headers()['Authorization'];
+            if (preg_match('/Bearer\s(\S+)/', $token, $matches)) {
+                try {
+                    return $jwt->verifyToken($matches[1]);
+                } catch (\Exception $e) {
+                    return null;
+                }
+            }
+
+            return null;
+        }
+    }
 }

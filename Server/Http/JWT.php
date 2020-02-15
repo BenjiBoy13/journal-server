@@ -23,7 +23,7 @@ class JWT
         $time = time();
         $jwtToken = array(
             'iat' => $time,
-            'exp' => $time + (60*60),
+            'exp' => $time + 2419200,
             'data' => $data
         );
 

@@ -3,7 +3,9 @@
 namespace Server\Repositories;
 
 
-class UserRepository extends \Doctrine\ORM\EntityRepository
+use Doctrine\ORM\EntityRepository;
+
+class UserRepository extends EntityRepository
 {
     public function findUserByEmail (string $email)
     {

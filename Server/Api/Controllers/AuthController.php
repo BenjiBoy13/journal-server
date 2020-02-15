@@ -16,6 +16,7 @@ class AuthController extends BaseController
 {
     /**
      * @param HttpRequest $httpRequest
+     * @param JWT $jwt
      * @param array $postArgs
      * @throws DBALException
      * @throws ORMException
@@ -46,8 +47,8 @@ class AuthController extends BaseController
                     'loggedIn' => true,
                     'token' => $jwt->createToken(array(
                         'id' => $user->getId(),
-                        'username' => $user->getUsername(),
-                        'fullName' => $user->getFullName()
+                        'nickname' => $user->getNickname(),
+                        'creationDate' => $user->getCreationDate()
                     ))
                 ));
 
@@ -67,12 +68,11 @@ class AuthController extends BaseController
      */
     public function registerAction (HttpRequest $httpRequest, array $postArgs)
     {
-        $username = isset($postArgs['username']) ? $postArgs['username'] : null;
-        $fullName = isset($postArgs['fullName']) ? $postArgs['fullName'] : null;
+        $nickname = isset($postArgs['nickname']) ? $postArgs['nickname'] : null;
         $email = isset($postArgs['email']) ? $postArgs['email'] : null;
         $password = isset($postArgs['password']) ? $postArgs['password'] : null;
 
-        if ($username != null && $fullName != null && $email != null && $password != null) {
+        if ($nickname != null && $email != null && $password != null) {
             $em = $this->getOrmManager();
 
             $repository = $em->getRepository('Server\Models\UserEntity');
@@ -88,32 +88,34 @@ class AuthController extends BaseController
             $datetime->setTimezone($zone);
 
             $newUser = new UserEntity();
-            $newUser->setUsername($username);
-            $newUser->setFullName($fullName);
+            $newUser->setNickname($nickname);
             $newUser->setEmail($email);
             $newUser->setPassword($password);
             $newUser->setCreationDate($datetime);
 
             $em->persist($newUser);
             $em->flush();
-            $httpRequest->jsonResponse(200, "The user $username was created");
+            $httpRequest->jsonResponse(200, "The user $nickname was created");
             return;
         }
 
         $httpRequest->jsonResponse(500, "Invalid parameters");
     }
 
-    public function myselfAction (HttpRequest $httpRequest, JWT $jwt)
+    public function myselfAction (HttpRequest $httpRequest)
     {
-        if (isset(apache_request_headers()['Authorization'])) {
-            $token = apache_request_headers()['Authorization'];
-            if (preg_match('/Bearer\s(\S+)/', $token, $matches)) {
-                $tokenResponse = $jwt->verifyToken($matches[1]);
-                print_r($tokenResponse);
-                return;
-            }
+        $authenticated = $httpRequest->authenticated();
+
+        if ($authenticated !== null) {
+            $httpRequest->jsonResponse(200, "Authentication confirmed", array(
+                'user' => $authenticated->data,
+                'iat' => $authenticated->iat,
+                'expiration' => $authenticated->exp
+            ));
+
+            return;
         }
 
-        $httpRequest->jsonResponse(401, "Access denied, no token provided");
+        $httpRequest->jsonResponse(401, "Access denied");
     }
 }
