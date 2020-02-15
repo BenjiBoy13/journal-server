@@ -9,6 +9,7 @@ use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
 use Exception;
 use Server\Http\HttpRequest;
+use Server\Http\JWT;
 use Server\Models\UserEntity;
 
 class AuthController extends BaseController
@@ -19,7 +20,7 @@ class AuthController extends BaseController
      * @throws DBALException
      * @throws ORMException
      */
-    public function loginAction (HttpRequest $httpRequest, array $postArgs)
+    public function loginAction (HttpRequest $httpRequest, JWT $jwt, array $postArgs)
     {
         $email = isset($postArgs['email']) ? $postArgs['email'] : null;
         $password = isset($postArgs['password']) ? $postArgs['password'] : null;
@@ -42,7 +43,12 @@ class AuthController extends BaseController
 
             if (password_verify($password, $user->getPassword())) {
                 $httpRequest->jsonResponse(200, "Success, Welcome back", array(
-                    'loggedIn' => true
+                    'loggedIn' => true,
+                    'token' => $jwt->createToken(array(
+                        'id' => $user->getId(),
+                        'username' => $user->getUsername(),
+                        'fullName' => $user->getFullName()
+                    ))
                 ));
 
                 return;
@@ -95,5 +101,19 @@ class AuthController extends BaseController
         }
 
         $httpRequest->jsonResponse(500, "Invalid parameters");
+    }
+
+    public function myselfAction (HttpRequest $httpRequest, JWT $jwt)
+    {
+        if (isset(apache_request_headers()['Authorization'])) {
+            $token = apache_request_headers()['Authorization'];
+            if (preg_match('/Bearer\s(\S+)/', $token, $matches)) {
+                $tokenResponse = $jwt->verifyToken($matches[1]);
+                print_r($tokenResponse);
+                return;
+            }
+        }
+
+        $httpRequest->jsonResponse(401, "Access denied, no token provided");
     }
 }

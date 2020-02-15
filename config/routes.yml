@@ -28,3 +28,10 @@ auth:
         - password
       services:
         - Server\Http\HttpRequest
+        - Server\Http\JWT
+    - path: /myself
+      method: GET
+      action: myselfAction
+      services:
+        - Server\Http\HttpRequest
+        - Server\Http\JWT

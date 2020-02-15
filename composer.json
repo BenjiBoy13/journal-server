@@ -5,7 +5,9 @@
     "require": {
         "symfony/yaml": "^5.0",
         "ext-json": "*",
-        "doctrine/orm": "^2.7"
+        "doctrine/orm": "^2.7",
+        "firebase/php-jwt": "^5.0",
+        "ext-apache": "*"
     },
     "autoload": {
         "psr-4": {
