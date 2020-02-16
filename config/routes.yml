@@ -51,3 +51,22 @@ journals:
       action: getUserJournals
       services:
         - Server\Http\HttpRequest
+    - path: /journal
+      method: GET
+      action: retrieveJournalAction
+      services:
+        - Server\Http\HttpRequest
+    - path: /journals/edit
+      method: PUT
+      action: editJournalAction
+      parameters:
+        - title
+        - content
+        - date
+      services:
+        - Server\Http\HttpRequest
+    - path: /journals/delete
+      method: DELETE
+      action: deleteJournalAction
+      services:
+        - Server\Http\HttpRequest

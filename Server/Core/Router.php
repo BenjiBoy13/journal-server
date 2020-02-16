@@ -27,6 +27,10 @@ class Router
             $controller = new $routes['controller'];
 
             foreach ($routes['paths'] as $path) {
+                if (strpos($request['uri'], "?")) {
+                    $request['uri'] = explode('?', $request['uri'])[0];
+                }
+
                 if ($path['path'] == $request['uri'] && $path['method'] == $request['method']) {
                     $parameters = array();
                     $action = $path['action'];

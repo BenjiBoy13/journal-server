@@ -19,7 +19,7 @@ class JournalEntity
      * @ORM\Column(type="integer", name="jrnl_id")
      * @ORM\GeneratedValue
      */
-    private int $id;
+    private ?int $id;
 
     /**
      * @ORM\Column(type="string", name="jrnl_title")

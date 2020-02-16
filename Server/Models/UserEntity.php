@@ -4,7 +4,6 @@
 namespace Server\Models;
 
 use DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\PersistentCollection;
 
@@ -19,7 +18,7 @@ class UserEntity
      * @ORM\Column(type="integer", name="usr_id")
      * @ORM\GeneratedValue
      */
-    private int $id;
+    private ?int $id;
 
     /**
      * @ORM\Column(type="string", name="usr_nickname")
@@ -45,11 +44,6 @@ class UserEntity
      * @ORM\OneToMany(targetEntity="JournalEntity", mappedBy="user")
      */
     private PersistentCollection $journals;
-
-    public function __construct()
-    {
-        $this->journals = new PersistentCollection();
-    }
 
     /**
      * @return int

@@ -24,6 +24,11 @@ class HttpRequest
         );
     }
 
+    public function getUrlValues ()
+    {
+        return $_GET;
+    }
+
     public function jsonResponse (int $code, string $msg, array $content = [])
     {
         header('Content-Type: application/json');
