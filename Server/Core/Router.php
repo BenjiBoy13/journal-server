@@ -6,10 +6,33 @@ namespace Server\Core;
 use Server\Http\HttpRequest;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * ------------------------------------------------------
+ * Class Router
+ * ------------------------------------------------------
+ *
+ * Wires the router configuration file with proper
+ * controllers and execute those with their respective
+ * needs, either classes services, post arguments
+ *
+ * @author Benjamin Gil Flores
+ * @version NaN
+ * @package Server\Core
+ */
 class Router
 {
+    /**
+     * @var HttpRequest Instance of HttpRequest Service
+     */
     private HttpRequest $httpRequest;
 
+    /**
+     * Router constructor.
+     *
+     * Defines class properties
+     *
+     * @param HttpRequest $httpRequest
+     */
     public function __construct(HttpRequest $httpRequest)
     {
         $this->httpRequest = $httpRequest;
@@ -17,7 +40,13 @@ class Router
         $this->executeActionForRoute();
     }
 
-    private function executeActionForRoute ()
+    /**
+     * Finds and instantiate the controller wired with the
+     * desired route with post parameters if needed
+     *
+     * @return void
+     */
+    private function executeActionForRoute () : void
     {
         $notFound = true;
         $request = $this->httpRequest->getRequest();
@@ -63,6 +92,13 @@ class Router
         }
     }
 
+    /**
+     * Instantiate passed services and returns
+     * them in an array
+     *
+     * @param array $services
+     * @return array
+     */
     private function getServices (array $services) : array
     {
         $instancedServices = array();
