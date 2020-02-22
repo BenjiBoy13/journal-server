@@ -29,7 +29,8 @@ class JournalRepository extends EntityRepository
         $dql = /** @lang DQL */ "
             SELECT j 
             FROM Server\Models\JournalEntity j, Server\Models\UserEntity u
-            WHERE u.id = :id
+            WHERE u.id = j.user
+            AND j.user = :id
             AND j.creationDate BETWEEN :from and :to
         ";
 
@@ -39,7 +40,6 @@ class JournalRepository extends EntityRepository
             ->setParameter('from', $from)
             ->setParameter('to', $to)
             ->getResult();
-
 
         if (!empty($results)) {
             return $results[0];

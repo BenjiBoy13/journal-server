@@ -63,4 +63,16 @@ class HttpRequest
             return null;
         }
     }
+
+    public function getJsonBodyFromRequest () : ?object
+    {
+        $data = file_get_contents("php://input");
+        $data = json_decode($data);
+
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $data;
+        }
+
+        return null;
+    }
 }

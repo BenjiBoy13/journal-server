@@ -57,7 +57,7 @@ journals:
       services:
         - Server\Http\HttpRequest
     - path: /journals/edit
-      method: PUT
+      method: POST
       action: editJournalAction
       parameters:
         - title

@@ -11,6 +11,7 @@ use Doctrine\ORM\ORMException;
 use Exception;
 use Server\Http\HttpRequest;
 use Server\Models\JournalEntity;
+use Server\Models\UserEntity;
 
 class JournalController extends BaseController
 {
@@ -28,16 +29,17 @@ class JournalController extends BaseController
         $content = isset($postArgs['content']) ? $postArgs['content'] : null;
 
         if ($authenticated) {
-            if ($title !== null && $content !== null) {
+            if ($title && $content) {
                 $em = $this->getOrmManager();
-                $userRepository = $em->getRepository('Server\Models\UserEntity');
-                $journalRepository = $em->getRepository('Server\Models\JournalEntity');
+                $userRepository = $em->getRepository(UserEntity::class);
+                $journalRepository = $em->getRepository(JournalEntity::class);
 
                 $authUser = $userRepository->find($authenticated->data->id);
 
                 $zone = new DateTimeZone("America/Monterrey");
                 $datetime = new DateTime();
                 $datetime->setTimezone($zone);
+
 
                 if ($journalRepository->findByUserAndDate($authenticated->data->id, $datetime)) {
                     $httpRequest->jsonResponse(406, "Failed to add new diary entry, already created for this day");
@@ -81,7 +83,7 @@ class JournalController extends BaseController
         if ($authenticated) {
             $userId = $authenticated->data->id;
             $em = $this->getOrmManager();
-            $userRepository = $em->getRepository('Server\Models\UserEntity');
+            $userRepository = $em->getRepository(UserEntity::class);
 
             $user = $userRepository->find($userId);
             $journals = array();
@@ -114,11 +116,11 @@ class JournalController extends BaseController
         $getParams = $httpRequest->getUrlValues();
         $authenticated = $httpRequest->authenticated();
         $em = $this->getOrmManager();
-        $journalRepository = $em->getRepository('Server\Models\JournalEntity');
+        $journalRepository = $em->getRepository(JournalEntity::class);
 
         $date = isset($getParams['date']) ? $getParams['date'] : null;
 
-        if ($date !== null) {
+        if ($date) {
             if ($authenticated) {
                 $userId = $authenticated->data->id;
                 $date = new DateTime($date);
@@ -207,16 +209,27 @@ class JournalController extends BaseController
         $em = $this->getOrmManager();
 
         if ($authenticated) {
-            $data = json_decode(file_get_contents("php://input"));
+            $data = $httpRequest->getJsonBodyFromRequest();
+
+            if (!$data) {
+                $httpRequest->jsonResponse(500, "Invalid request body");
+                return;
+            }
+
             $id = $data->id;
 
             $journal = $em->find(JournalEntity::class, $id);
 
             if ($journal) {
-                $em->remove($journal);
-                $em->flush();
+                if ($journal->getUser()->getId() === $authenticated->data->id) {
+                    $em->remove($journal);
+                    $em->flush();
 
-                $httpRequest->jsonResponse(200, "Deleted with success");
+                    $httpRequest->jsonResponse(200, "Deleted with success");
+                    return;
+                }
+
+                $httpRequest->jsonResponse(401, "You dont have permission to delete this entry");
                 return;
             }
 
