@@ -71,7 +71,9 @@ class Router
                     if (isset($path['parameters'])) {
                         $postArgs = array();
 
+
                         foreach ($path['parameters'] as $parameter) {
+                            $_POST = $this->httpRequest->sanitizeData($_POST);
                             if (isset($_POST[$parameter])) {
                                 $postArgs[$parameter] = $_POST[$parameter];
                             }

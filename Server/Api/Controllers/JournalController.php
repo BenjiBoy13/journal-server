@@ -113,7 +113,7 @@ class JournalController extends BaseController
      */
     public function retrieveJournalAction (HttpRequest $httpRequest)
     {
-        $getParams = $httpRequest->getUrlValues();
+        $getParams = $httpRequest->sanitizeData($_GET);
         $authenticated = $httpRequest->authenticated();
         $em = $this->getOrmManager();
         $journalRepository = $em->getRepository(JournalEntity::class);
