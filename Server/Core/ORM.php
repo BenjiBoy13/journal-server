@@ -9,7 +9,6 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Tools\Setup;
-use Symfony\Component\Yaml\Yaml;
 
 /**
  * ------------------------------------------------------
@@ -59,15 +58,14 @@ class ORM
      */
     public function __construct()
     {
-        $ormSettings = Yaml::parseFile('./config/orm.yml');
+        $yamlParser = new YamlParser();
+        $ormSettings = $yamlParser->parseIt('./config/orm.yml');
 
-        $dbSettings = $ormSettings['db'];
-
-        $this->dbHost = $dbSettings['host'];
-        $this->dbName = $dbSettings['database'];
-        $this->dbUsername = $dbSettings['username'];
-        $this->dbPassword = $dbSettings['password'];
-        $this->dbDriver = $dbSettings['driver'];
+        $this->dbHost = $ormSettings['host'];
+        $this->dbName = $ormSettings['database'];
+        $this->dbUsername = $ormSettings['username'];
+        $this->dbPassword = $ormSettings['password'];
+        $this->dbDriver = $ormSettings['driver'];
     }
 
     /**

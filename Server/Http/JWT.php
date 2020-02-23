@@ -4,18 +4,17 @@
 namespace Server\Http;
 
 
-use Symfony\Component\Yaml\Yaml;
+use Server\Core\YamlParser;
 
 class JWT
 {
     private string $secret;
-    private array $algorithm;
 
     public function __construct()
     {
-        $authSettings = Yaml::parseFile('./config/auth.yml');
+        $ymlParser = new YamlParser();
+        $authSettings = $ymlParser->parseIt('./config/auth.yml');
         $this->secret = $authSettings['secret'];
-        $this->algorithm = array($authSettings['algorithm']);
     }
 
     public function createToken (array $data)

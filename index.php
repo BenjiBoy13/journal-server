@@ -2,15 +2,19 @@
 
 require_once './vendor/autoload.php';
 
+use Server\Core\YamlParser;
 use Server\Kernel;
-use Symfony\Component\Yaml\Yaml;
 
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
+$dotEnv = new Symfony\Component\Dotenv\Dotenv();
+$dotEnv->load(__DIR__ . "/.env");
+
 function diary_exception_handler (Throwable $exception)
 {
-    $serverConfig = Yaml::parseFile('./config/server.yml');
+    $yamlParser = new YamlParser();
+    $serverConfig = $yamlParser->parseIt('./config/server.yml');
     header('Content-Type: application/json');
     http_response_code(500);
 
@@ -36,7 +40,5 @@ function diary_exception_handler (Throwable $exception)
 }
 
 set_exception_handler('diary_exception_handler');
-
-
 
 new Kernel();

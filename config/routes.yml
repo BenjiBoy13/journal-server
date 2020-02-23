@@ -1,3 +1,12 @@
+# Configuration File
+#
+# The routes configuration files defines all of the mapping
+# between the application routes and the controllers of the
+# software as well as the HTTP methods the accept and services
+# parameters and method to be executed.
+#
+# TODO: Make this file doc better.
+
 root:
   controller: Server\Api\Controllers\RootController
   paths:

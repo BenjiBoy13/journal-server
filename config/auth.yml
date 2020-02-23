@@ -1,2 +1,7 @@
-secret: mydiaryapi
-algorithm: HS256
+# Configuration File
+#
+# The auth configuration file holds the secret key of the
+# application JWT token system as well as the algorithm
+# in use
+
+secret: "env(JWT_SECRET)"

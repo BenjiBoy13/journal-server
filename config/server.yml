@@ -1,2 +1,10 @@
-web_root: /diary.project/server
-debug: true
+# Configuration File
+#
+# Defines the web root in which the project is hosted
+# and the mode of the environment, notice that web
+# root variable is optional, depends on where the project
+# is hosted
+
+
+web_root: "env(WEB_ROOT)"
+debug: "env(DEBUG)"

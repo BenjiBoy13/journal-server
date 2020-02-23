@@ -1,6 +1,10 @@
-db:
-  host: localhost
-  database: db_diary
-  username: root
-  password: BgF04131999
-  driver: pdo_mysql
+# Configuration File
+#
+# The ORM configuration file holds the environment variables
+# for the connection to the database
+
+host: "env(DB_HOST)"
+database: "env(DB_DATABASE)"
+username: "env(DB_USERNAME)"
+password: "env(DB_PASSWORD)"
+driver: "env(DB_DRIVER)"

@@ -2,13 +2,15 @@
 
 namespace Server\Http;
 
-use Symfony\Component\Yaml\Yaml;
+use Exception;
+use Server\Core\YamlParser;
 
 class HttpRequest
 {
     public function getRequest ()
     {
-        $serverConfig = Yaml::parseFile('./config/server.yml');
+        $ymlParser = new YamlParser();
+        $serverConfig = $ymlParser->parseIt('./config/server.yml');
         $requestedUri = $_SERVER['REQUEST_URI'];
         $requestedMethod = $_SERVER['REQUEST_METHOD'];
 
@@ -55,13 +57,15 @@ class HttpRequest
             if (preg_match('/Bearer\s(\S+)/', $token, $matches)) {
                 try {
                     return $jwt->verifyToken($matches[1]);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     return null;
                 }
             }
 
             return null;
         }
+
+        return null;
     }
 
     public function getJsonBodyFromRequest () : ?object
