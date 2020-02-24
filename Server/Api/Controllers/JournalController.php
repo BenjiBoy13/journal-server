@@ -27,9 +27,10 @@ class JournalController extends BaseController
 
         $title = isset($postArgs['title']) ? $postArgs['title'] : null;
         $content = isset($postArgs['content']) ? $postArgs['content'] : null;
+        $share = isset($postArgs['share']) ? $postArgs['share'] : null;
 
         if ($authenticated) {
-            if ($title && $content) {
+            if ($title && $content && $share) {
                 $em = $this->getOrmManager();
                 $userRepository = $em->getRepository(UserEntity::class);
                 $journalRepository = $em->getRepository(JournalEntity::class);
@@ -40,6 +41,11 @@ class JournalController extends BaseController
                 $datetime = new DateTime();
                 $datetime->setTimezone($zone);
 
+                if ($share == "false") {
+                    $share = false;
+                } else {
+                    $share = true;
+                }
 
                 if ($journalRepository->findByUserAndDate($authenticated->data->id, $datetime)) {
                     $httpRequest->jsonResponse(406, "Failed to add new diary entry, already created for this day");
@@ -51,6 +57,7 @@ class JournalController extends BaseController
                 $newJournal->setContent($content);
                 $newJournal->setCreationDate($datetime);
                 $newJournal->setUser($authUser);
+                $newJournal->setShare($share);
 
                 $em->persist($newJournal);
                 $em->flush();
@@ -92,6 +99,7 @@ class JournalController extends BaseController
                 $journals[$key]['id'] = $journal->getId();
                 $journals[$key]['title'] = $journal->getTitle();
                 $journals[$key]['content'] = $journal->getContent();
+                $journals[$key]['share'] = $journal->getShare();
                 $journals[$key]['date'] = $journal->getCreationDate();
             }
 
@@ -131,6 +139,7 @@ class JournalController extends BaseController
                         'id' => $entry->getId(),
                         'title' => $entry->getTitle(),
                         'content' => $entry->getContent(),
+                        'share' => $entry->getShare(),
                         'date' => $entry->getCreationDate()
                     ));
 
@@ -158,13 +167,20 @@ class JournalController extends BaseController
         $date = isset($postArgs['date']) ? $postArgs['date'] : null;
         $title = isset($postArgs['title']) ? $postArgs['title'] : null;
         $content = isset($postArgs['content']) ? $postArgs['content'] : null;
+        $share = isset($postArgs['share']) ? $postArgs['share'] : null;
         $authenticated = $httpRequest->authenticated();
         $em = $this->getOrmManager();
 
         if ($authenticated) {
-            if ($title && $content && $date) {
+            if ($title && $content && $date && $share) {
                 $today = strtotime(date("Y-m-d"));
                 $dateStr = strtotime($date);
+
+                if ($share == "false") {
+                    $share = false;
+                } else {
+                    $share = true;
+                }
 
                 $dateDifference = $dateStr - $today;
                 $difference = floor($dateDifference / (60 * 60 * 24));
@@ -178,6 +194,7 @@ class JournalController extends BaseController
                     if ($journal) {
                         $journal->setTitle($title);
                         $journal->setContent($content);
+                        $journal->setShare($share);
                         $em->flush();
 
                         $httpRequest->jsonResponse(200, "Entry updated");
@@ -238,5 +255,30 @@ class JournalController extends BaseController
         }
 
         $httpRequest->jsonResponse(401, "Access denied");
+    }
+
+    /**
+     * @param HttpRequest $httpRequest
+     * @throws DBALException
+     * @throws ORMException
+     */
+    public function showSharedAction (HttpRequest $httpRequest)
+    {
+        $em = $this->getOrmManager();
+        $journalRepository = $em->getRepository(JournalEntity::class);
+        $results = $journalRepository->getSharedJournals();
+        $entriesFound = array();
+
+        foreach ($results as $key => $entry) {
+            $entriesFound[$key]['id'] = $entry->getId();
+            $entriesFound[$key]['user'] = $entry->getUser()->getNickname();
+            $entriesFound[$key]['title'] = $entry->getTitle();
+            $entriesFound[$key]['content'] = $entry->getContent();
+            $entriesFound[$key]['date'] = $entry->getCreationDate();
+        }
+
+        $httpRequest->jsonResponse(200, "Retrieved shared journals with success", array(
+            'journals' => $entriesFound
+        ));;
     }
 }

@@ -47,4 +47,18 @@ class JournalRepository extends EntityRepository
 
         return null;
     }
+
+    public function getSharedJournals () : array
+    {
+        $dql = /** @lang DQL */ "
+            SELECT j
+            FROM Server\Models\JournalEntity j
+            WHERE j.share = :share
+        ";
+
+        return $this->getEntityManager()
+            ->createQuery($dql)
+            ->setParameter('share', 1)
+            ->getResult();
+    }
 }

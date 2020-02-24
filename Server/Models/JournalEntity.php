@@ -43,6 +43,11 @@ class JournalEntity
     private DateTime $creationDate;
 
     /**
+     * @ORM\Column(type="boolean", name="jrnl_share")
+     */
+    private bool $share = false;
+
+    /**
      * @return int
      */
     public function getId ()
@@ -112,5 +117,15 @@ class JournalEntity
     public function setCreationDate(DateTime $creationDate): void
     {
         $this->creationDate = $creationDate;
+    }
+
+    public function getShare (): bool
+    {
+        return $this->share;
+    }
+
+    public function setShare (bool $share)
+    {
+        $this->share = $share;
     }
 }

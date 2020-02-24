@@ -53,6 +53,7 @@ journals:
       parameters:
         - title
         - content
+        - share
       services:
         - Server\Http\HttpRequest
     - path: /journals
@@ -72,10 +73,16 @@ journals:
         - title
         - content
         - date
+        - share
       services:
         - Server\Http\HttpRequest
     - path: /journals/delete
       method: DELETE
       action: deleteJournalAction
+      services:
+        - Server\Http\HttpRequest
+    - path: /journals/shared
+      method: GET
+      action: showSharedAction
       services:
         - Server\Http\HttpRequest
