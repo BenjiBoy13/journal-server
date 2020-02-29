@@ -16,14 +16,13 @@ use Server\Models\UserEntity;
 class JournalController extends BaseController
 {
     /**
-     * @param HttpRequest $httpRequest
      * @param array $postArgs
      * @throws DBALException
      * @throws ORMException
      */
-    public function addJournalAction (HttpRequest $httpRequest, array $postArgs)
+    public function addJournalAction (array $postArgs)
     {
-        $authenticated = $httpRequest->authenticated();
+        $authenticated = $this->httpRequest->authenticated();
 
         $title = isset($postArgs['title']) ? $postArgs['title'] : null;
         $content = isset($postArgs['content']) ? $postArgs['content'] : null;
@@ -48,7 +47,7 @@ class JournalController extends BaseController
                 }
 
                 if ($journalRepository->findByUserAndDate($authenticated->data->id, $datetime)) {
-                    $httpRequest->jsonResponse(406, "Failed to add new diary entry, already created for this day");
+                    $this->httpRequest->jsonResponse(406, "Failed to add new diary entry, already created for this day");
                     return;
                 }
 
@@ -62,7 +61,7 @@ class JournalController extends BaseController
                 $em->persist($newJournal);
                 $em->flush();
 
-                $httpRequest->jsonResponse(201, "Added diary entry", array(
+                $this->httpRequest->jsonResponse(201, "Added diary entry", array(
                     'title' => $title,
                     'author' => $authUser->getNickname()
                 ));
@@ -70,22 +69,21 @@ class JournalController extends BaseController
                 return;
             }
 
-            $httpRequest->jsonResponse(500, "Failed to add journal, invalid parameters");
+            $this->httpRequest->jsonResponse(500, "Failed to add journal, invalid parameters");
 
             return;
         }
 
-        $httpRequest->jsonResponse(401, "Access denied");
+        $this->httpRequest->jsonResponse(401, "Access denied");
     }
 
     /**
-     * @param HttpRequest $httpRequest
      * @throws DBALException
      * @throws ORMException
      */
-    public function getUserJournals (HttpRequest $httpRequest)
+    public function getUserJournals ()
     {
-        $authenticated = $httpRequest->authenticated();
+        $authenticated = $this->httpRequest->authenticated();
 
         if ($authenticated) {
             $userId = $authenticated->data->id;
@@ -103,26 +101,25 @@ class JournalController extends BaseController
                 $journals[$key]['date'] = $journal->getCreationDate();
             }
 
-            $httpRequest->jsonResponse(200, "Fetched journals with success", array(
+            $this->httpRequest->jsonResponse(200, "Fetched journals with success", array(
                 'journals' => $journals
             ));
 
             return;
         }
 
-        $httpRequest->jsonResponse(401, "Access denied");
+        $this->httpRequest->jsonResponse(401, "Access denied");
     }
 
     /**
-     * @param HttpRequest $httpRequest
      * @throws DBALException
      * @throws ORMException
      * @throws Exception
      */
-    public function retrieveJournalAction (HttpRequest $httpRequest)
+    public function retrieveJournalAction ()
     {
-        $getParams = $httpRequest->sanitizeData($_GET);
-        $authenticated = $httpRequest->authenticated();
+        $getParams = $this->httpRequest->sanitizeData($_GET);
+        $authenticated = $this->httpRequest->authenticated();
         $em = $this->getOrmManager();
         $journalRepository = $em->getRepository(JournalEntity::class);
 
@@ -135,7 +132,7 @@ class JournalController extends BaseController
                 $entry = $journalRepository->findByUserAndDate($userId, $date);
 
                 if ($entry) {
-                    $httpRequest->jsonResponse(200, "Entry found", array(
+                    $this->httpRequest->jsonResponse(200, "Entry found", array(
                         'id' => $entry->getId(),
                         'title' => $entry->getTitle(),
                         'content' => $entry->getContent(),
@@ -146,15 +143,15 @@ class JournalController extends BaseController
                     return;
                 }
 
-                $httpRequest->jsonResponse(404, "No entry found");
+                $this->httpRequest->jsonResponse(404, "No entry found");
                 return;
             }
 
-            $httpRequest->jsonResponse(401, "Access denied");
+            $this->httpRequest->jsonResponse(401, "Access denied");
             return;
         }
 
-        $httpRequest->jsonResponse(500, "Invalid request, date missing");
+        $this->httpRequest->jsonResponse(500, "Invalid request, date missing");
     }
 
     /**
@@ -162,13 +159,13 @@ class JournalController extends BaseController
      * @param array $postArgs
      * @throws Exception
      */
-    public function editJournalAction (HttpRequest $httpRequest, array $postArgs)
+    public function editJournalAction (array $postArgs)
     {
         $date = isset($postArgs['date']) ? $postArgs['date'] : null;
         $title = isset($postArgs['title']) ? $postArgs['title'] : null;
         $content = isset($postArgs['content']) ? $postArgs['content'] : null;
         $share = isset($postArgs['share']) ? $postArgs['share'] : null;
-        $authenticated = $httpRequest->authenticated();
+        $authenticated = $this->httpRequest->authenticated();
         $em = $this->getOrmManager();
 
         if ($authenticated) {
@@ -197,39 +194,38 @@ class JournalController extends BaseController
                         $journal->setShare($share);
                         $em->flush();
 
-                        $httpRequest->jsonResponse(200, "Entry updated");
+                        $this->httpRequest->jsonResponse(200, "Entry updated");
                         return;
                     }
 
-                    $httpRequest->jsonResponse(404, "No journal found, cant update");
+                    $this->httpRequest->jsonResponse(404, "No journal found, cant update");
                     return;
                 }
 
-                $httpRequest->jsonResponse(406, "Cannot update old entries");
+                $this->httpRequest->jsonResponse(406, "Cannot update old entries");
                 return;
             }
 
-            $httpRequest->jsonResponse(500, "Invalid parameters");
+            $this->httpRequest->jsonResponse(500, "Invalid parameters");
             return;
         }
 
-        $httpRequest->jsonResponse(401, "Access denied");
+        $this->httpRequest->jsonResponse(401, "Access denied");
     }
 
     /**
-     * @param HttpRequest $httpRequest
      * @throws Exception
      */
-    public function deleteJournalAction (HttpRequest $httpRequest)
+    public function deleteJournalAction ()
     {
-        $authenticated = $httpRequest->authenticated();
+        $authenticated = $this->httpRequest->authenticated();
         $em = $this->getOrmManager();
 
         if ($authenticated) {
-            $data = $httpRequest->getJsonBodyFromRequest();
+            $data = $this->httpRequest->getJsonBodyFromRequest();
 
             if (!$data) {
-                $httpRequest->jsonResponse(500, "Invalid request body");
+                $this->httpRequest->jsonResponse(500, "Invalid request body");
                 return;
             }
 
@@ -242,27 +238,26 @@ class JournalController extends BaseController
                     $em->remove($journal);
                     $em->flush();
 
-                    $httpRequest->jsonResponse(200, "Deleted with success");
+                    $this->httpRequest->jsonResponse(200, "Deleted with success");
                     return;
                 }
 
-                $httpRequest->jsonResponse(401, "You dont have permission to delete this entry");
+                $this->httpRequest->jsonResponse(401, "You dont have permission to delete this entry");
                 return;
             }
 
-            $httpRequest->jsonResponse(404, "No journal found, nothing to delete");
+            $this->httpRequest->jsonResponse(404, "No journal found, nothing to delete");
             return;
         }
 
-        $httpRequest->jsonResponse(401, "Access denied");
+        $this->httpRequest->jsonResponse(401, "Access denied");
     }
 
     /**
-     * @param HttpRequest $httpRequest
      * @throws DBALException
      * @throws ORMException
      */
-    public function showSharedAction (HttpRequest $httpRequest)
+    public function showSharedAction ()
     {
         $em = $this->getOrmManager();
         $journalRepository = $em->getRepository(JournalEntity::class);
@@ -277,7 +272,7 @@ class JournalController extends BaseController
             $entriesFound[$key]['date'] = $entry->getCreationDate();
         }
 
-        $httpRequest->jsonResponse(200, "Retrieved shared journals with success", array(
+        $this->httpRequest->jsonResponse(200, "Retrieved shared journals with success", array(
             'journals' => $entriesFound
         ));;
     }

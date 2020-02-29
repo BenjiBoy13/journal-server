@@ -4,10 +4,10 @@ namespace Server\Api\Controllers;
 
 use Server\Http\HttpRequest;
 
-class RootController
+class RootController extends BaseController
 {
-    public function indexAction (HttpRequest $httpRequest)
+    public function indexAction ()
     {
-        $httpRequest->jsonResponse(200, "My Journal Official Application Programming Interface (API)");
+        $this->httpRequest->jsonResponse(200, "My Journal Official Application Programming Interface (API)");
     }
 }

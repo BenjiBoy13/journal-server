@@ -31,7 +31,6 @@ class HttpRequest
         $allowedHtmlTags = "<p><h1><h2><h3><h4><h5><h6><b><strong><blockquote><a><hr><br>";
         foreach ($data as $key => $value) {
             $sanitizedString = strip_tags($value, $allowedHtmlTags);
-            $sanitizedString = htmlentities($sanitizedString, ENT_QUOTES, 'UTF-8');
             $data[$key] = $sanitizedString;
         }
 

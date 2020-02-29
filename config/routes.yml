@@ -13,8 +13,6 @@ root:
     - path: /
       method: GET
       action: indexAction
-      services:
-        - Server\Http\HttpRequest
 
 auth:
   controller: Server\Api\Controllers\AuthController
@@ -27,7 +25,6 @@ auth:
         - email
         - password
       services:
-        - Server\Http\HttpRequest
         - Server\Http\JWT
         - Server\Api\Services\MailingService
     - path: /login
@@ -37,25 +34,19 @@ auth:
         - email
         - password
       services:
-        - Server\Http\HttpRequest
         - Server\Http\JWT
     - path: /myself
       method: GET
       action: myselfAction
-      services:
-        - Server\Http\HttpRequest
-        - Server\Http\JWT
     - path: /mail-confirmation
       method: GET
       action: confirmEmailAction
       services:
-        - Server\Http\HttpRequest
         - Server\Http\JWT
     - path: /resend-mail
       method: GET
       action: resendEmailTokenAction
       services:
-        - Server\Http\HttpRequest
         - Server\Http\JWT
         - Server\Api\Services\MailingService
 
@@ -69,18 +60,12 @@ journals:
         - title
         - content
         - share
-      services:
-        - Server\Http\HttpRequest
     - path: /journals
       method: GET
       action: getUserJournals
-      services:
-        - Server\Http\HttpRequest
     - path: /journal
       method: GET
       action: retrieveJournalAction
-      services:
-        - Server\Http\HttpRequest
     - path: /journals/edit
       method: POST
       action: editJournalAction
@@ -89,15 +74,9 @@ journals:
         - content
         - date
         - share
-      services:
-        - Server\Http\HttpRequest
     - path: /journals/delete
       method: DELETE
       action: deleteJournalAction
-      services:
-        - Server\Http\HttpRequest
     - path: /journals/shared
       method: GET
       action: showSharedAction
-      services:
-        - Server\Http\HttpRequest

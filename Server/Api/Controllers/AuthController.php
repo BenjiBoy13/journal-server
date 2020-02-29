@@ -16,13 +16,12 @@ use Server\Models\UserEntity;
 class AuthController extends BaseController
 {
     /**
-     * @param HttpRequest $httpRequest
      * @param JWT $jwt
      * @param array $postArgs
      * @throws DBALException
      * @throws ORMException
      */
-    public function loginAction (HttpRequest $httpRequest, JWT $jwt, array $postArgs)
+    public function loginAction (JWT $jwt, array $postArgs)
     {
         $email = isset($postArgs['email']) ? $postArgs['email'] : null;
         $password = isset($postArgs['password']) ? $postArgs['password'] : null;
@@ -34,7 +33,7 @@ class AuthController extends BaseController
             $user = $repository->findUserByEmail($email);
 
             if (empty($user)) {
-                $httpRequest->jsonResponse(200, "Email not registered", array(
+                $this->httpRequest->jsonResponse(200, "Email not registered", array(
                     'loggedIn' => false
                 ));
 
@@ -54,7 +53,7 @@ class AuthController extends BaseController
                         $em->flush();
                     }
 
-                    $httpRequest->jsonResponse(200, "Logged in with success, welcome back", array(
+                    $this->httpRequest->jsonResponse(200, "Logged in with success, welcome back", array(
                         'loggedIn' => true,
                         'token' => $userToken
                     ));
@@ -66,7 +65,7 @@ class AuthController extends BaseController
                 $user->setToken($newToken);
                 $em->flush();
 
-                $httpRequest->jsonResponse(200, "Logged in with success", array(
+                $this->httpRequest->jsonResponse(200, "Logged in with success", array(
                     'loggedIn' => true,
                     'token' => $newToken
                 ));
@@ -74,21 +73,20 @@ class AuthController extends BaseController
                 return;
             }
 
-            $httpRequest->jsonResponse(200, "Invalid credentials", array(
+            $this->httpRequest->jsonResponse(200, "Invalid credentials", array(
                 'loggedIn' => false
             ));
         }
     }
 
     /**
-     * @param HttpRequest $httpRequest
      * @param JWT $jwt
      * @param array $postArgs
      * @throws DBALException
      * @throws ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function registerAction (HttpRequest $httpRequest, JWT $jwt, MailingService $mailingService, array $postArgs)
+    public function registerAction (JWT $jwt, MailingService $mailingService, array $postArgs)
     {
         $nickname = isset($postArgs['nickname']) ? $postArgs['nickname'] : null;
         $email = isset($postArgs['email']) ? $postArgs['email'] : null;
@@ -101,7 +99,7 @@ class AuthController extends BaseController
             $userAlreadyCreated = $repository->findUserByEmail($email);
 
             if (!empty($userAlreadyCreated)) {
-                $httpRequest->jsonResponse(500, "Email already in use");
+                $this->httpRequest->jsonResponse(500, "Email already in use");
                 return;
             }
 
@@ -129,19 +127,19 @@ class AuthController extends BaseController
 
             $mailed = $mailingService->sendMail($email, $nickname, $emailContent);
 
-            $httpRequest->jsonResponse(200, "The user $nickname was created", array(
+            $this->httpRequest->jsonResponse(200, "The user $nickname was created", array(
                 'mailed' => $mailed ? "Validation email send" : "Could not send validation email"
             ));
 
             return;
         }
 
-        $httpRequest->jsonResponse(500, "Invalid parameters");
+        $this->httpRequest->jsonResponse(500, "Invalid parameters");
     }
 
-    public function confirmEmailAction (HttpRequest $httpRequest, JWT $jwt)
+    public function confirmEmailAction (JWT $jwt)
     {
-        $getParams = $httpRequest->sanitizeData($_GET);
+        $getParams = $this->httpRequest->sanitizeData($_GET);
         $em = $this->getOrmManager();
         $userRepository = $em->getRepository(UserEntity::class);
 
@@ -158,37 +156,36 @@ class AuthController extends BaseController
                     $user = $user[0];
 
                     if ($user->getEmailVerified()) {
-                        $httpRequest->jsonResponse(406, "Email already verified");
+                        $this->httpRequest->jsonResponse(406, "Email already verified");
                         return;
                     }
 
                     $user->setEmailVerified(true);
                     $em->flush();
-                    $httpRequest->jsonResponse(200, "Email address verified with success");
+                    $this->httpRequest->jsonResponse(200, "Email address verified with success");
                     return;
                 }
 
-                $httpRequest->jsonResponse(500, "User not found");
+                $this->httpRequest->jsonResponse(500, "User not found");
                 return;
             }
 
-            $httpRequest->jsonResponse(401, "Invalid token");
+            $this->httpRequest->jsonResponse(401, "Invalid token");
             return;
         }
 
-        $httpRequest->jsonResponse(500, "Invalid parameters");
+        $this->httpRequest->jsonResponse(500, "Invalid parameters");
     }
 
     /**
-     * @param HttpRequest $httpRequest
      * @param JWT $jwt
      * @param MailingService $mailingService
      * @throws DBALException
      * @throws ORMException
      */
-    public function resendEmailTokenAction (HttpRequest $httpRequest, JWT $jwt, MailingService $mailingService)
+    public function resendEmailTokenAction (JWT $jwt, MailingService $mailingService)
     {
-        $authenticated = $httpRequest->authenticated();
+        $authenticated = $this->httpRequest->authenticated();
         $em = $this->getOrmManager();
         $userRepository = $em->getRepository(UserEntity::class);
 
@@ -200,6 +197,11 @@ class AuthController extends BaseController
                 $userEmail = $user->getEmail();
                 $userNickname = $user->getNickname();
 
+                if ($user->getEmailVerified()) {
+                    $this->httpRequest->jsonResponse(406, "Already confirmed email address");
+                    return;
+                }
+
                 $emailConfirmationToken = $jwt->createToken(array(
                     'email' => $userEmail
                 ), true);
@@ -210,26 +212,26 @@ class AuthController extends BaseController
                 ";
 
                 $mailed = $mailingService->sendMail($userEmail, $userNickname, $emailContent);
-                $httpRequest->jsonResponse(200, "Done", array(
+                $this->httpRequest->jsonResponse(200, "Done", array(
                     'mailed' => $mailed ? "Email send with success" : "Could not send email"
                 ));
 
                 return;
             }
 
-            $httpRequest->jsonResponse(500, "User not found");
+            $this->httpRequest->jsonResponse(500, "User not found");
             return;
         }
 
-        $httpRequest->jsonResponse(401, "Access denied");
+        $this->httpRequest->jsonResponse(401, "Access denied");
     }
 
-    public function myselfAction (HttpRequest $httpRequest)
+    public function myselfAction ()
     {
-        $authenticated = $httpRequest->authenticated();
+        $authenticated = $this->httpRequest->authenticated();
 
         if ($authenticated !== null) {
-            $httpRequest->jsonResponse(200, "Authentication confirmed", array(
+            $this->httpRequest->jsonResponse(200, "Authentication confirmed", array(
                 'user' => $authenticated->data,
                 'iat' => $authenticated->iat,
                 'expiration' => $authenticated->exp
@@ -238,6 +240,6 @@ class AuthController extends BaseController
             return;
         }
 
-        $httpRequest->jsonResponse(401, "Access denied");
+        $this->httpRequest->jsonResponse(401, "Access denied");
     }
 }
