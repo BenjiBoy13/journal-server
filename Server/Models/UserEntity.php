@@ -41,6 +41,21 @@ class UserEntity
     private DateTime $creationDate;
 
     /**
+     * @ORM\Column(type="text", name="usr_token", nullable=true)
+     */
+    private ?string $token;
+
+    /**
+     * @ORM\Column(type="boolean", name="usr_email_verfified")
+     */
+    private bool $emailVerified = false;
+
+    /**
+     * @ORM\Column(type="string", name="usr_login_provider")
+     */
+    private string $loginProvider = "diary_app_provider";
+
+    /**
      * @ORM\OneToMany(targetEntity="JournalEntity", mappedBy="user")
      */
     private PersistentCollection $journals;
@@ -116,6 +131,54 @@ class UserEntity
     public function setCreationDate(DateTime $creationDate): void
     {
         $this->creationDate = $creationDate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getToken ()
+    {
+        return $this->token;
+    }
+
+    /**
+     * @param string $token
+     */
+    public function setToken (string $token)
+    {
+        $this->token = $token;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getEmailVerified ()
+    {
+        return $this->emailVerified;
+    }
+
+    /**
+     * @param bool $emailVerified
+     */
+    public function setEmailVerified (bool $emailVerified)
+    {
+        $this->emailVerified = $emailVerified;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLoginProvider ()
+    {
+        return $this->loginProvider;
+    }
+
+    /**
+     * @param string $loginProvider
+     */
+    public function setLoginProvider (string $loginProvider)
+    {
+        $this->loginProvider = $loginProvider;
     }
 
     /**

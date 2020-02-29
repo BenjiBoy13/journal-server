@@ -7,7 +7,7 @@ use Doctrine\ORM\EntityRepository;
 
 class UserRepository extends EntityRepository
 {
-    public function findUserByEmail (string $email)
+    public function findUserByEmail (string $email) : array
     {
         $dql = /** @lang DQL */ "SELECT u FROM Server\Models\UserEntity u WHERE u.email = ?1";
 

@@ -28,6 +28,8 @@ auth:
         - password
       services:
         - Server\Http\HttpRequest
+        - Server\Http\JWT
+        - Server\Api\Services\MailingService
     - path: /login
       method: POST
       action: loginAction
@@ -43,6 +45,19 @@ auth:
       services:
         - Server\Http\HttpRequest
         - Server\Http\JWT
+    - path: /mail-confirmation
+      method: GET
+      action: confirmEmailAction
+      services:
+        - Server\Http\HttpRequest
+        - Server\Http\JWT
+    - path: /resend-mail
+      method: GET
+      action: resendEmailTokenAction
+      services:
+        - Server\Http\HttpRequest
+        - Server\Http\JWT
+        - Server\Api\Services\MailingService
 
 journals:
   controller: Server\Api\Controllers\JournalController

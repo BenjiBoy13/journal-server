@@ -62,11 +62,8 @@ class HttpRequest
         if (isset(apache_request_headers()['Authorization'])) {
             $token = apache_request_headers()['Authorization'];
             if (preg_match('/Bearer\s(\S+)/', $token, $matches)) {
-                try {
-                    return $jwt->verifyToken($matches[1]);
-                } catch (Exception $e) {
-                    return null;
-                }
+
+                return $jwt->verifyToken($matches[1]) ? $jwt->verifyToken($matches[1]) : null;
             }
 
             return null;

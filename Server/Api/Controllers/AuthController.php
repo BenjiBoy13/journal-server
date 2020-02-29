@@ -8,6 +8,7 @@ use DateTimeZone;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
 use Exception;
+use Server\Api\Services\MailingService;
 use Server\Http\HttpRequest;
 use Server\Http\JWT;
 use Server\Models\UserEntity;
@@ -43,13 +44,31 @@ class AuthController extends BaseController
             $user = $user[0];
 
             if (password_verify($password, $user->getPassword())) {
-                $httpRequest->jsonResponse(200, "Success, Welcome back", array(
+                if ($user->getToken()) {
+                    $userToken = $user->getToken();
+
+                    if (!$jwt->verifyToken($userToken)) {
+                        $userToken = $jwt->generateNewToken($user);
+
+                        $user->setToken($userToken);
+                        $em->flush();
+                    }
+
+                    $httpRequest->jsonResponse(200, "Logged in with success, welcome back", array(
+                        'loggedIn' => true,
+                        'token' => $userToken
+                    ));
+
+                    return;
+                }
+
+                $newToken = $jwt->generateNewToken($user);
+                $user->setToken($newToken);
+                $em->flush();
+
+                $httpRequest->jsonResponse(200, "Logged in with success", array(
                     'loggedIn' => true,
-                    'token' => $jwt->createToken(array(
-                        'id' => $user->getId(),
-                        'nickname' => $user->getNickname(),
-                        'creationDate' => $user->getCreationDate()
-                    ))
+                    'token' => $newToken
                 ));
 
                 return;
@@ -63,10 +82,13 @@ class AuthController extends BaseController
 
     /**
      * @param HttpRequest $httpRequest
+     * @param JWT $jwt
      * @param array $postArgs
-     * @throws Exception
+     * @throws DBALException
+     * @throws ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function registerAction (HttpRequest $httpRequest, array $postArgs)
+    public function registerAction (HttpRequest $httpRequest, JWT $jwt, MailingService $mailingService, array $postArgs)
     {
         $nickname = isset($postArgs['nickname']) ? $postArgs['nickname'] : null;
         $email = isset($postArgs['email']) ? $postArgs['email'] : null;
@@ -95,11 +117,111 @@ class AuthController extends BaseController
 
             $em->persist($newUser);
             $em->flush();
-            $httpRequest->jsonResponse(200, "The user $nickname was created");
+
+            $emailConfirmationToken = $jwt->createToken(array(
+                'email' => $email
+            ), true);
+
+            $emailContent = "
+                <h3> Confirm your email </h3>
+                <p> Go to $emailConfirmationToken </p>
+            ";
+
+            $mailed = $mailingService->sendMail($email, $nickname, $emailContent);
+
+            $httpRequest->jsonResponse(200, "The user $nickname was created", array(
+                'mailed' => $mailed ? "Validation email send" : "Could not send validation email"
+            ));
+
             return;
         }
 
         $httpRequest->jsonResponse(500, "Invalid parameters");
+    }
+
+    public function confirmEmailAction (HttpRequest $httpRequest, JWT $jwt)
+    {
+        $getParams = $httpRequest->sanitizeData($_GET);
+        $em = $this->getOrmManager();
+        $userRepository = $em->getRepository(UserEntity::class);
+
+        $token = isset($getParams['token']) ? $getParams['token'] : null;
+
+        if ($token) {
+            $tokenContent = $jwt->verifyToken($token);
+
+            if ($tokenContent) {
+                $mailToVerified = $tokenContent->data->email;
+                $user = $userRepository->findUserByEmail($mailToVerified);
+
+                if (!empty($user)) {
+                    $user = $user[0];
+
+                    if ($user->getEmailVerified()) {
+                        $httpRequest->jsonResponse(406, "Email already verified");
+                        return;
+                    }
+
+                    $user->setEmailVerified(true);
+                    $em->flush();
+                    $httpRequest->jsonResponse(200, "Email address verified with success");
+                    return;
+                }
+
+                $httpRequest->jsonResponse(500, "User not found");
+                return;
+            }
+
+            $httpRequest->jsonResponse(401, "Invalid token");
+            return;
+        }
+
+        $httpRequest->jsonResponse(500, "Invalid parameters");
+    }
+
+    /**
+     * @param HttpRequest $httpRequest
+     * @param JWT $jwt
+     * @param MailingService $mailingService
+     * @throws DBALException
+     * @throws ORMException
+     */
+    public function resendEmailTokenAction (HttpRequest $httpRequest, JWT $jwt, MailingService $mailingService)
+    {
+        $authenticated = $httpRequest->authenticated();
+        $em = $this->getOrmManager();
+        $userRepository = $em->getRepository(UserEntity::class);
+
+        if ($authenticated) {
+            $userId = $authenticated->data->id;
+            $user = $userRepository->find($userId);
+
+            if ($user) {
+                $userEmail = $user->getEmail();
+                $userNickname = $user->getNickname();
+
+                $emailConfirmationToken = $jwt->createToken(array(
+                    'email' => $userEmail
+                ), true);
+
+                $emailContent = "
+                    <h3> Confirm your email </h3>
+                    <p> Go to $emailConfirmationToken </p>
+                ";
+
+                $mailed = $mailingService->sendMail($userEmail, $userNickname, $emailContent);
+                $httpRequest->jsonResponse(200, "Done", array(
+                    'mailed' => $mailed ? "Email send with success" : "Could not send email"
+                ));
+
+                return;
+            }
+
+            $httpRequest->jsonResponse(500, "User not found");
+            return;
+        }
+
+        $httpRequest->jsonResponse(401, "Access denied");
     }
 
     public function myselfAction (HttpRequest $httpRequest)
